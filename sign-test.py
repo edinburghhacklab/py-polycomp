@@ -4,9 +4,15 @@ import serial
 import time
 import sys
 
-msg_arg = ''.join(sys.argv[1:]) or 'cats like hats'
+msg_arg = 'DEFAULT MESSAGE'
+cmd_args = sys.argv[1:]
+if len(cmd_args):
+    msg_arg = ''.join(cmd_args)
+else:
+    msg_arg = ''
 
-portname = '/dev/tty.usbserial-AH00ROQ8'
+portname = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH00ROQ8-if00-port0'
+
 
 # header 
 pkt_header = bytearray([0x00, # header sync
@@ -16,15 +22,18 @@ pkt_header = bytearray([0x00, # header sync
                     ])
 
 #msg_prefix = bytearray("\xC8001\xEF\xC1\x80")
-msg_prefix = bytearray([
-    0b1100000, # serial status flags (orig. 0xc8)
-    0x30, # page (0xx)
-    0x30, # page (x0x)
-    0x31, # page (xx1) = 001
-    0xef, # ? # tempo
-    0xc2, # ? # function = paint
-    0x80, # ? # page status
-])
+def build_prefix(func=1, speed=15):
+    msg_prefix = bytearray([
+        0b1100000, # serial status flags (orig. 0xc8)
+        0x30, # page (0xx)
+        0x30, # page (x0x)
+        0x31, # page (xx1) = 001
+        0b11000000 | speed, # ? # tempo
+        0xc0 | (func & 0x0f), # ? # function = paint
+        0x80, # ? # page status
+    ])
+    return msg_prefix
+
 # flags = 0b1100 1000
 # --------
 # :0, :5 = 0
@@ -72,7 +81,7 @@ msg_prefix = bytearray([
 msg_suffix = bytearray([0x04]) # EOT - end of text/packet.
 
 def construct_message(msg):
-    msgbuf = pkt_header + msg_prefix + bytearray(msg) + msg_suffix
+    msgbuf = pkt_header + build_prefix(15, 3) + bytearray(msg) + msg_suffix
     checksum = build_checksum(msgbuf)
     msgbuf += bytearray([checksum])
     return str(msgbuf)
@@ -83,18 +92,20 @@ def build_checksum(buf):
         chk ^= c
     return chk
 
+port = None
+
 try:
     port = serial.Serial(portname, 9600)
     msg_pkt = construct_message(msg_arg)
     port.flushInput()
     port.flushOutput()
-    while True:
-        print 'pkt: ', repr(msg_pkt)
-        #print str(msg_pkt)
-        port.write(msg_pkt)
-        port.flush()
-        time.sleep(1.0)
+    print 'pkt: ', repr(msg_pkt)
+    #print str(msg_pkt)
+    port.write(msg_pkt)
+    port.flush()
+    #time.sleep(1.0)
         
 finally:
-    port.close()
+    if port:
+        port.close()
     print "Done"
