@@ -1,0 +1,4 @@
+pyserial
+construct
+ipython
+ipdb
