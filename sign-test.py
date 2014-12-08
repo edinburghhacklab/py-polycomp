@@ -24,7 +24,7 @@ pkt_header = bytearray([0x00, # header sync
 #msg_prefix = bytearray("\xC8001\xEF\xC1\x80")
 def build_prefix(func=1, speed=15):
     msg_prefix = bytearray([
-        0b1100000, # serial status flags (orig. 0xc8)
+        0b11000000, # serial status flags (orig. 0xc8)
         0x30, # page (0xx)
         0x30, # page (x0x)
         0x31, # page (xx1) = 001
@@ -95,14 +95,14 @@ def build_checksum(buf):
 port = None
 
 try:
-    port = serial.Serial(portname, 9600)
+#    port = serial.Serial(portname, 9600)
     msg_pkt = construct_message(msg_arg)
-    port.flushInput()
-    port.flushOutput()
+ #   port.flushInput()
+  #  port.flushOutput()
     print 'pkt: ', repr(msg_pkt)
     #print str(msg_pkt)
-    port.write(msg_pkt)
-    port.flush()
+#    port.write(msg_pkt)
+#    port.flush()
     #time.sleep(1.0)
         
 finally:

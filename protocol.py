@@ -51,7 +51,7 @@ PAGE_FUNC = cst.BitStruct('page_func',
                                    SLIDE=15))
 
 PAGE_CFG = cst.BitStruct('page_cfg',
-                         cst.Magic('\x01')
+                         cst.Magic('\x01'),
                          cst.Flag('background_on'),
                          cst.Flag('non_english'),
                          cst.Flag('autocenter'),
@@ -62,7 +62,25 @@ PAGE_CFG = cst.BitStruct('page_cfg',
                          )
 
 CMD_SEQ = cst.Sequence('_cmd', cst.Magic('\x1c'),
-                       cst.Enum(Byte('cmd'),
+                       cst.Enum(cst.Byte('cmd'),
                                 FLASH='F', ENLARGE='E',
                                 RED='R', GREEN='G', YELLOW='Y',
                                 MULTICOLOUR='M', DEFAULT='D'))
+
+PAGE = cst.Struct('page',
+                  PAGE_IDX,
+                  cst.Embed(TEMPO),
+                  cst.Embed(PAGE_FUNC),
+                  cst.Embed(PAGE_CFG),
+                  cst.CString('body', terminators='\x04'))
+
+MESSAGE = cst.Struct('msg', HEADER, SER_STATUS, PAGE)
+
+def main(*args):
+    pass
+
+if __name__ == '__main__':
+    import sys
+    args = sys.argv[1:]
+    main(args)
+    
