@@ -74,8 +74,31 @@ PAGE = cst.Struct('page',
                   cst.Embed(PAGE_CFG),
                   cst.CString('body', terminators='\x04'))
 
+DATETIME_BODY = cst.Struct('datetime_page',
+                           cst.Const(PAGE_IDX, '000'),
+
+)
+# values as ascii numbers 0x30-0x39
+
+# hours_m
+# hours_l
+# mins_m
+# mins_l
+# secs_m
+# secs_l
+# date_m
+# date_l
+# mon_m
+# mon_l
+# day_m (= '0')
+# day_l (1=sun, 2=mon...)
+
+
 MESSAGE = cst.Struct('msg', HEADER, SER_STATUS, PAGE)
 
+
+def datetime_page():
+    
 def main(*args):
     pass
 

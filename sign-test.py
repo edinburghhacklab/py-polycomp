@@ -95,14 +95,14 @@ def build_checksum(buf):
 port = None
 
 try:
-#    port = serial.Serial(portname, 9600)
+    port = serial.Serial(portname, 9600)
     msg_pkt = construct_message(msg_arg)
- #   port.flushInput()
-  #  port.flushOutput()
+    port.flushInput()
+    port.flushOutput()
     print 'pkt: ', repr(msg_pkt)
     #print str(msg_pkt)
-#    port.write(msg_pkt)
-#    port.flush()
+    port.write(msg_pkt)
+    port.flush()
     #time.sleep(1.0)
         
 finally:
