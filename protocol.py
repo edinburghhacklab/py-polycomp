@@ -3,6 +3,8 @@ import construct as cst
 import time
 import sys
 
+con = cst.Container  # alias
+
 HEADER = cst.Struct('pc_header',
                     cst.Magic('\x00'),
                     cst.Const(cst.UBInt8('lines'), 1),
@@ -98,6 +100,50 @@ MESSAGE = cst.Struct('msg', HEADER, SER_STATUS, PAGE)
 
 
 def datetime_page():
+    pass
+
+def header(addr=1):
+    return con(address=addr, lines=1)
+
+def mk_serst(sched=False, ack=True, more=False, intr=False):
+    return con(schedule_enabled=sched,
+               ack_enabled=ack,
+               further_pages=more,
+               interrupt_mode=intr)
+
+def mk_page(msg):
+    return con(page_num='001',
+               display_ctrl='TIMED',
+               persist_time='S10',
+               show_temp=False,
+               show_time=False,
+               page_effect='APPEAR',
+               background_on=False,
+               non_english=False,
+               autocenter=False,
+               bold_joins_78=False,
+               bold_joins_56=False,
+               bold_joins_34=False,
+               bold_joins_12=False,
+               body=msg
+           )
+
+def build_checksum(buf):
+    chk = 0
+    for c in buf:
+        chk ^= c
+    return chk
+
+
+def simple_static_message(message):
+    c = con(pc_header=header(),
+            serst=mk_serst(intr=False),
+            page=mk_page(msg=message)
+    )
+    ba_packet = bytearray(MESSAGE.build(c))
+    ck = build_checksum(ba_packet)
+    ba_packet.append(ck)
+    return str(ba_packet)
     
 def main(*args):
     pass

@@ -3,6 +3,9 @@
 import serial
 import time
 import sys
+import platform
+import protocol as pcp
+import arrow
 
 msg_arg = 'DEFAULT MESSAGE'
 cmd_args = sys.argv[1:]
@@ -11,8 +14,13 @@ if len(cmd_args):
 else:
     msg_arg = ''
 
-portname = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH00ROQ8-if00-port0'
-
+ostype = platform.system().lower()
+if ostype.startswith('darwin'):
+    portname = '/dev/tty.usbserial-AH00ROQ8'
+    print "OSX, using %s" %  portname    
+else:
+    portname = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH00ROQ8-if00-port0'
+    print "Other OS, using %s" %  portname    
 
 # header 
 pkt_header = bytearray([0x00, # header sync
@@ -24,7 +32,7 @@ pkt_header = bytearray([0x00, # header sync
 #msg_prefix = bytearray("\xC8001\xEF\xC1\x80")
 def build_prefix(func=1, speed=15):
     msg_prefix = bytearray([
-        0b11000000, # serial status flags (orig. 0xc8)
+        0xc8,#0b11000000, # serial status flags (orig. 0xc8)
         0x30, # page (0xx)
         0x30, # page (x0x)
         0x31, # page (xx1) = 001
@@ -94,16 +102,30 @@ def build_checksum(buf):
 
 port = None
 
+def update_display(msg=' '*12):
+    pass
+
+def fmt_timedelta(start, end=None):
+    if end is None:
+        end = arrow.now()
+    delta = end - start
+    dmins, dsecs = divmod(delta.total_seconds(), 60)
+    return '{:02d}:{:06.03f}'.format(int(dmins), dsecs)
 try:
     port = serial.Serial(portname, 9600)
-    msg_pkt = construct_message(msg_arg)
+    #msg_pkt = construct_message(msg_arg)
     port.flushInput()
     port.flushOutput()
-    print 'pkt: ', repr(msg_pkt)
-    #print str(msg_pkt)
-    port.write(msg_pkt)
-    port.flush()
-    #time.sleep(1.0)
+    start_time = arrow.now()
+    while True:
+        td = fmt_timedelta(start=start_time)
+        msg_pkt = pcp.simple_static_message(msg_arg + ' ' + td)
+            
+        print 'pkt: ', repr(msg_pkt)
+        #print str(msg_pkt)
+        port.write(msg_pkt)
+        port.flush()
+        time.sleep(0.2)
         
 finally:
     if port:
