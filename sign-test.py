@@ -111,23 +111,25 @@ def fmt_timedelta(start, end=None):
     delta = end - start
     dmins, dsecs = divmod(delta.total_seconds(), 60)
     return '{:02d}:{:06.03f}'.format(int(dmins), dsecs)
-try:
-    port = serial.Serial(portname, 9600)
-    #msg_pkt = construct_message(msg_arg)
-    port.flushInput()
-    port.flushOutput()
-    start_time = arrow.now()
-    while True:
-        td = fmt_timedelta(start=start_time)
-        msg_pkt = pcp.simple_static_message(msg_arg + ' ' + td)
-            
-        print 'pkt: ', repr(msg_pkt)
-        #print str(msg_pkt)
-        port.write(msg_pkt)
-        port.flush()
-        time.sleep(0.2)
-        
-finally:
-    if port:
-        port.close()
-    print "Done"
+
+def main():
+    try:
+        port = serial.Serial(portname, 9600)
+        #msg_pkt = construct_message(msg_arg)
+        port.flushInput()
+        port.flushOutput()
+        start_time = arrow.now()
+        while True:
+            td = fmt_timedelta(start=start_time)
+            msg_pkt = pcp.simple_static_message(msg_arg + ' ' + td)
+
+            print 'pkt: ', repr(msg_pkt)
+            #print str(msg_pkt)
+            port.write(msg_pkt)
+            port.flush()
+            time.sleep(0.2)
+
+    finally:
+        if port:
+            port.close()
+        print "Done"
